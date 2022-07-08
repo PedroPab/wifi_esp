@@ -52,6 +52,18 @@ void setup() {
 void loop() {
   //Wait 1s
   delay(1000);
-  miVariable = random(100);
+
+  miVariable = random(100);//variable que queremos mandar
+
+  //REST calls
+  WiFiClient client = server.available();
+  if (!client) {
+    return;
+  }
+  while (!client.available()) {
+    delay(1);
+  }
+  rest.handle(client);
+
 
 }
