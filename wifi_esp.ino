@@ -19,7 +19,7 @@ WiFiServer server(LISTEN_PORT);
 //variables API
 
 float temperatura;
-
+float temperatura_2;
 
 int thermoDO = D5;
 int thermoCS = D6;
@@ -41,18 +41,20 @@ void setup() {
   lcd.backlight();            //Activate backlight
   lcd.home();
   lcd.setCursor(0, 0);
-  lcd.print("saludos humanosꞙ");
+  lcd.print("saludos humanos");
   //init variable Api
   rest.variable("temperatura", &temperatura);
 
   //name id
   rest.set_id("1");
-  rest.set_name("nodev");
+  rest.set_name("nodevTermocupla");
 
   //connecten to wifi
   WiFi.begin(ssid, password);
-  lcd.setCursor(0, 0);
 
+  lcd.setCursor(0, 0);
+  delay(500);
+  lcd.clear();
   while (WiFi.status() != WL_CONNECTED)
   {
     delay(500);
@@ -61,19 +63,25 @@ void setup() {
   }
   Serial.println("");
   Serial.print("Wifi connected!!");
+  lcd.clear();
   lcd.print("Wifi connected!!");
 
   //start server
 
   server.begin();
   Serial.println("server started!");
-  lcd.setCursor(2, 0);
-  lcd.print("server ꞙ௹👀👀👀👀🔴🔴☺♀♥ " );
-  lcd.setCursor(1, 1);
-  lcd.print(WiFi.localIP() );
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("server started!" );
+
+
   //ip
   Serial.println(WiFi.localIP());
+  lcd.setCursor(1, 1);
+  lcd.print(WiFi.localIP() );
   delay(5000);
+  WiFi.printDiag(Serial);
 
 }
 
@@ -82,6 +90,23 @@ void loop() {
   delay(1000);
 
   temperatura = thermocouple.readCelsius();//variable que queremos mandar
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("C*= ");
+  lcd.print(temperatura );
+  lcd.print("  ");
+
+  if(temperatura > temperatura_2){
+    lcd.print("+");
+  } else if(temperatura < temperatura_2){
+    lcd.print("-");
+  }else{
+    lcd.print("=");
+  }
+
+  temperatura_2 = thermocouple.readCelsius();
+
 
   //REST calls
   WiFiClient client = server.available();
@@ -93,5 +118,15 @@ void loop() {
   }
   rest.handle(client);
 
+  if(temperatura < 30){
+    lcd.setCursor(2,0);
+    lcd.print("TOSO BINE");
+  }
 
+
+
+}
+
+void alerta(){
+  
 }
