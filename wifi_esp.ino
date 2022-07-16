@@ -94,16 +94,19 @@ void loop() {
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("C*= ");
-  lcd.print(temperatura );
+  lcd.print(int(temperatura) );
   lcd.print("  ");
 
-  if(temperatura > temperatura_2){
+  if (temperatura > temperatura_2) {
     lcd.print("+");
-  } else if(temperatura < temperatura_2){
+  } else if (temperatura < temperatura_2) {
     lcd.print("-");
-  }else{
+  } else {
     lcd.print("=");
   }
+
+  condiciones();
+
 
   temperatura_2 = thermocouple.readCelsius();
 
@@ -118,15 +121,34 @@ void loop() {
   }
   rest.handle(client);
 
-  if(temperatura < 30){
-    lcd.setCursor(2,0);
-    lcd.print("TOSO BINE");
-  }
-
 
 
 }
 
-void alerta(){
-  
+void condiciones() {
+
+  lcd.setCursor(0, 1);
+  switch  (int(temperatura)) {
+    case 69:
+      lcd.print("jejeje, 69 XD");
+      break;
+    case 26:
+      lcd.print("y tu que miras?");
+      break;
+
+  }
+  if (temperatura > 165) {
+    lcd.setCursor(0, 1);
+    lcd.print("moderado :)       ");
+  }
+  if (temperatura > 174) {
+    lcd.setCursor(0, 1);
+    lcd.print("se quema !! :("   );
+    alerta();
+  }
+
+}
+
+void alerta() {
+
 }
