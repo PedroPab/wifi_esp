@@ -1,10 +1,12 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>//D4 d3
 #include "ESP8266WiFi.h"
+#include <ESP8266HTTPClient.h>
 #include "aREST.h"
 #include "max6675.h"
 
 aREST rest = aREST();
+WiFiClient wifiClient;
 
 // WiFi parameters
 const char* ssid = "CLARO_WIFIB4";
@@ -30,6 +32,7 @@ int temp2 = 60;
 
 int zum = D1;//zumbador
 
+String payload ;// varible de la hora
 
 
 MAX6675 thermocouple(thermoCLK, thermoCS, thermoDO);
@@ -69,6 +72,16 @@ void setup() {
     Serial.print(".");
     lcd.print(".");
   }
+  HTTPClient http;
+  http.begin(wifiClient, "http://worldtimeapi.org/api//timezone/America/Bogota/");  //Specify request destination
+  int httpCode = http.GET();
+  payload = http.getString();   //Get the request response payload
+  Serial.println(payload);
+  //Serial.println(http);
+  
+
+  // Disconnect
+  http.end();
   Serial.println("");
   Serial.print("Wifi connected!!");
   lcd.clear();
@@ -88,32 +101,45 @@ void setup() {
   Serial.println(WiFi.localIP());
   lcd.setCursor(1, 1);
   lcd.print(WiFi.localIP() );
-  delay(5000);
-  WiFi.printDiag(Serial);
+  delay(500);
+
 
 }
 
 void loop() {
   //Wait 1s
-  delay(500);
+  HTTPClient http;
+  http.begin(wifiClient, "http://worldtimeapi.org/api//timezone/America/Bogota/");  //Specify request destination
+  int httpCode = http.GET();
+  payload = http.getString();   //Get the request response payload
+  Serial.println(payload);
+  
+  
+  delay(100);
 
   temperatura = thermocouple.readCelsius();//variable que queremos mandar
 
   lcd.clear();
+  lcd.setCursor(11, 1);
+  lcd.print(payload.substring(73, 78));
   lcd.setCursor(0, 0);
   lcd.print("C*= ");
-  lcd.print(int(temperatura) );
+  lcd.print(temperatura);
   lcd.print("  ");
 
-  if (temperatura > temperatura_2) {
+  if (int(temperatura) > int(temperatura_2)) {
     lcd.print("+");
   } else if (temperatura < temperatura_2) {
     lcd.print("-");
   } else {
     lcd.print("=");
   }
+  
+  
+  
 
   condiciones();
+  
 
 
   temperatura_2 = thermocouple.readCelsius();
@@ -177,4 +203,7 @@ void alerta(int tipo) {
 
   }
 
+}
+void hora(){
+  
 }
