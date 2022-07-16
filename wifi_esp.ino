@@ -25,12 +25,20 @@ int thermoDO = D5;
 int thermoCS = D6;
 int thermoCLK = D7;
 
+int temp1 = 40;
+int temp2 = 60;
+
+int zum = D1;//zumbador
+
+
+
 MAX6675 thermocouple(thermoCLK, thermoCS, thermoDO);
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); //0x27 is the i2c address, while 16 = columns, and 2 = rows.
 
 
 void setup() {
+  pinMode(zum, OUTPUT);//zumbador
 
   Serial.begin(9600);
   Serial.print("hola mundo");
@@ -87,7 +95,7 @@ void setup() {
 
 void loop() {
   //Wait 1s
-  delay(1000);
+  delay(500);
 
   temperatura = thermocouple.readCelsius();//variable que queremos mandar
 
@@ -140,15 +148,33 @@ void condiciones() {
   if (temperatura > 165) {
     lcd.setCursor(0, 1);
     lcd.print("moderado :)       ");
+    alerta(0);
   }
   if (temperatura > 174) {
     lcd.setCursor(0, 1);
     lcd.print("se quema !! :("   );
-    alerta();
+    alerta(1);
   }
 
 }
 
-void alerta() {
+void alerta(int tipo) {
+  switch (tipo) {
+    case 0:
+      digitalWrite(zum, HIGH);
+      delay(temp2);
+      digitalWrite(zum, LOW);
+      //delay(775);
+
+      break;
+    case 1:
+      digitalWrite(zum, HIGH);
+
+      break;
+    default:
+      digitalWrite(zum, LOW);
+      break;
+
+  }
 
 }
