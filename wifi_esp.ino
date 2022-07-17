@@ -9,8 +9,8 @@ aREST rest = aREST();
 WiFiClient wifiClient;
 
 // WiFi parameters
-const char* ssid = "CLARO_WIFIB4";
-const char* password = "CLAROI58588";
+const char* ssid = "Domiburguer";
+const char* password = "Ventanalimpia";
 
 //PORT
 #define LISTEN_PORT 80
@@ -33,7 +33,7 @@ int temp2 = 60;
 int zum = D1;//zumbador
 
 String payload ;// varible de la hora
-
+String hora;
 
 MAX6675 thermocouple(thermoCLK, thermoCS, thermoDO);
 
@@ -55,11 +55,12 @@ void setup() {
   lcd.print("saludos humanos");
   //init variable Api
   rest.variable("temperatura", &temperatura);
-
+  rest.variable("hora", &hora);
+  
   //name id
   rest.set_id("1");
   rest.set_name("nodevTermocupla");
-
+  
   //connecten to wifi
   WiFi.begin(ssid, password);
 
@@ -108,20 +109,21 @@ void setup() {
 
 void loop() {
   //Wait 1s
+  //pedir la hora
   HTTPClient http;
   http.begin(wifiClient, "http://worldtimeapi.org/api//timezone/America/Bogota/");  //Specify request destination
   int httpCode = http.GET();
   payload = http.getString();   //Get the request response payload
   Serial.println(payload);
-  
+  hora = payload.substring(73, 82);
   
   delay(100);
 
   temperatura = thermocouple.readCelsius();//variable que queremos mandar
 
   lcd.clear();
-  lcd.setCursor(11, 1);
-  lcd.print(payload.substring(73, 78));
+  lcd.setCursor(10, 1);
+  lcd.print(payload.substring(73, 79));
   lcd.setCursor(0, 0);
   lcd.print("C*= ");
   lcd.print(temperatura);
@@ -204,6 +206,6 @@ void alerta(int tipo) {
   }
 
 }
-void hora(){
+void hora7(){
   
 }
