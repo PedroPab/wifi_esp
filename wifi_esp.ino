@@ -21,6 +21,10 @@ WiFiServer server(LISTEN_PORT);
 //variables API
 
 float temperatura;
+String payload ;// varible de la hora
+String hora;
+String fecha;
+
 float temperatura_2;
 
 int thermoDO = D5;
@@ -32,23 +36,44 @@ int temp2 = 60;
 
 int zum = D1;//zumbador
 
-String payload ;// varible de la hora
-String hora;
 
 MAX6675 thermocouple(thermoCLK, thermoCS, thermoDO);
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); //0x27 is the i2c address, while 16 = columns, and 2 = rows.
 
 
+//caracteres especiales
+byte grados[8] = {
+  B00111,
+  B00101,
+  B00111,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+};
+byte craneo[8] = {
+  B00000,
+  B11111,
+  B10101,
+  B11011,
+  B01110,
+  B01010,
+  B00000,
+};
+
+
 void setup() {
   pinMode(zum, OUTPUT);//zumbador
 
   Serial.begin(9600);
-  Serial.print("hola mundo");
+  Serial.print("Bienbenidos sean todos");
   //iniciando pantalla lcd
 
   Wire.begin(2, 0); // gpio 2 and gpio 0 which are D4, and D3
-  lcd.init();                 //Init the LCD
+  lcd.init(); //Init the LCD
+  lcd.createChar(0, grados);
+  lcd.createChar(1, craneo);
   lcd.backlight();            //Activate backlight
   lcd.home();
   lcd.setCursor(0, 0);
@@ -56,11 +81,12 @@ void setup() {
   //init variable Api
   rest.variable("temperatura", &temperatura);
   rest.variable("hora", &hora);
-  
+  rest.variable("fecha", &fecha);
+
   //name id
   rest.set_id("1");
   rest.set_name("nodevTermocupla");
-  
+
   //connecten to wifi
   WiFi.begin(ssid, password);
 
@@ -71,7 +97,16 @@ void setup() {
   {
     delay(500);
     Serial.print(".");
+    Serial.print(millis());
     lcd.print(".");
+    if (millis() > 50000) {
+      Serial.println("");
+      Serial.print("Wifi not connected!!");
+      lcd.clear();
+      lcd.print("Wifi not connected!!");
+      delay(2000);
+      sinInternet();
+    }
   }
   HTTPClient http;
   http.begin(wifiClient, "http://worldtimeapi.org/api//timezone/America/Bogota/");  //Specify request destination
@@ -79,10 +114,11 @@ void setup() {
   payload = http.getString();   //Get the request response payload
   Serial.println(payload);
   //Serial.println(http);
-  
+
 
   // Disconnect
   http.end();
+
   Serial.println("");
   Serial.print("Wifi connected!!");
   lcd.clear();
@@ -102,47 +138,22 @@ void setup() {
   Serial.println(WiFi.localIP());
   lcd.setCursor(1, 1);
   lcd.print(WiFi.localIP() );
-  delay(500);
+  delay(1500);
 
 
 }
 
 void loop() {
-  //Wait 1s
-  //pedir la hora
-  HTTPClient http;
-  http.begin(wifiClient, "http://worldtimeapi.org/api//timezone/America/Bogota/");  //Specify request destination
-  int httpCode = http.GET();
-  payload = http.getString();   //Get the request response payload
-  Serial.println(payload);
-  hora = payload.substring(73, 82);
-  
-  delay(100);
+
+  lcd.setCursor(0, 1);
+  lcd.print("          ");
 
   temperatura = thermocouple.readCelsius();//variable que queremos mandar
 
-  lcd.clear();
-  lcd.setCursor(10, 1);
-  lcd.print(payload.substring(73, 79));
-  lcd.setCursor(0, 0);
-  lcd.print("C*= ");
-  lcd.print(temperatura);
-  lcd.print("  ");
-
-  if (int(temperatura) > int(temperatura_2)) {
-    lcd.print("+");
-  } else if (temperatura < temperatura_2) {
-    lcd.print("-");
-  } else {
-    lcd.print("=");
-  }
-  
-  
-  
-
+  escribirTemperatura(temperatura, temperatura_2);
+  escribirHora();
   condiciones();
-  
-
+  escribirHora();
 
   temperatura_2 = thermocouple.readCelsius();
 
@@ -206,6 +217,67 @@ void alerta(int tipo) {
   }
 
 }
-void hora7(){
-  
+
+void escribirTemperatura(float temperatura, float temperatura2) {
+
+  //borrarmos el inicio
+
+
+  lcd.setCursor(0, 0);
+  lcd.print("C");
+  lcd.write(byte(0));
+  lcd.print("  ");
+  lcd.setCursor(4, 0);
+  lcd.print("            ");
+  lcd.setCursor(4, 0);
+  lcd.print(temperatura);
+  lcd.print(" ");
+
+
+  if (int(temperatura) > int(temperatura_2)) {
+    lcd.print("+");
+    
+  } else if (temperatura < temperatura_2) {
+    lcd.print("-");
+    
+  } else {
+    lcd.print("=");
+    
+  }
+  lcd.setCursor(15, 0);
+  lcd.write(byte(1));
+}
+
+void escribirHora() {
+  //pedir la hora
+  HTTPClient http;
+  http.begin(wifiClient, "http://worldtimeapi.org/api//timezone/America/Bogota/");  //Specify request destination
+  int httpCode = http.GET();
+  payload = http.getString();   //Get the request response payload
+
+  Serial.println(payload);
+  hora = payload.substring(73, 82);
+
+  lcd.setCursor(10, 1);
+  lcd.print(payload.substring(73, 79));
+}
+
+void sinInternet() {
+
+
+
+  temperatura = thermocouple.readCelsius();//variable que queremos mandar
+
+  escribirTemperatura(temperatura, temperatura_2);
+
+  condiciones();
+
+  temperatura_2 = thermocouple.readCelsius();
+  lcd.setCursor(0, 1);
+  lcd.print("WiFi not connected");
+
+
+  delay(500);
+  sinInternet();
+
 }
